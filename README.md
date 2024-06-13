@@ -23,3 +23,5 @@ chmod +x open
 cd xxx
 open
 ```
+
+![](Snipaste_2024-06-13_17-12-33.png)
