@@ -1,0 +1,63 @@
+#--- open
+#---
+#--- Usage: Open the Windows folder with Explore
+#---
+#--- Info: Run from windows cygwin or WSL1/WSL2
+#---------------------------------------------------------------------------
+
+INSTALL_PATH='\\wsl$\Ubuntu-22.04'
+
+if [[ $INSTALL_PATH != "" ]]; then {
+    # Open the current path
+    if [[ $# -eq 0 ]]; then {
+        open_path=$PWD    
+    # open the specific path
+    } else {
+        open_path="$@"
+    }
+    fi
+    
+    if [[ `echo $open_path | awk '{if ($0 ~ /^\/mnt/) print "cygdrive"}'` != "" ]]; then {
+        # Transfer the path format from linux to windows
+        real_path=`echo $open_path | gawk '{
+            split($0, tmp, "/")
+            if (tmp[3] != "") {
+                tmp_path=tmp_path""tmp[3]":"
+            } else {
+                next
+            }
+            
+            for (i=4; ; i++) {
+                if (tmp[i] == "") {
+                    break
+                }
+                
+                tmp_path=tmp_path"\\\"tmp[i]
+            }   
+            
+            print tmp_path
+        }'`
+        
+        if [[ $real_path == "" ]]; then {
+            echo "This is a virtual Cygwin directory which does not exist for a native Windows application."
+            exit
+        } 
+        fi
+    } elif [[ $(echo $open_path | grep ":") != "" ]]; then {
+        # This is a windows style path and open directly.
+        real_path=${open_path//\//\\}
+    } else {
+        # This is a WT ubuntu path and open with intall path.
+        open_path=${open_path//\//\\}
+        real_path=$INSTALL_PATH""$open_path
+    }
+    fi
+    
+    # Call windows API to open this file
+    echo $real_path
+    explorer.exe $real_path 2>/dev/null
+} else {
+    echo "Please add your cygwin install path in /home/$USER/.bash_profile"
+    echo "eg. export INSTALL_PATH=\"C:\\cygwin64\""
+}
+fi
